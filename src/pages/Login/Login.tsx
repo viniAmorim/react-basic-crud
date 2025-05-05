@@ -32,7 +32,7 @@ export default function Login() {
 
   const onSubmit = (data: LoginFormData) => {
     localStorage.setItem("user", JSON.stringify(data));
-    navigate("/dashboard");
+    navigate("/");
   };
 
   return (
