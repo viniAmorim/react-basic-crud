@@ -1,26 +1,23 @@
+import { useLogin } from "../../hooks/useLogin";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { Button, Container, ErrorText, Form, Input } from "./styles";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { Container, Form, Input, Button, ErrorText } from "./styles"; // Importando os estilos
 
 interface LoginFormData {
   email: string;
   password: string;
 }
 
-const schema = yup
-  .object({
-    email: yup.string().email("Email inválido").required("Email obrigatório"),
-    password: yup
-      .string()
-      .min(6, "Mínimo 6 caracteres")
-      .required("Senha obrigatória"),
-  })
-  .required();
+const schema = yup.object().shape({
+  email: yup.string().email().required("Email obrigatório"),
+  password: yup.string().required("Senha obrigatória"),
+});
 
 export default function Login() {
   const navigate = useNavigate();
+  const { mutate: login, isPending } = useLogin();
 
   const {
     register,
@@ -31,28 +28,32 @@ export default function Login() {
   });
 
   const onSubmit = (data: LoginFormData) => {
-    localStorage.setItem("user", JSON.stringify(data));
-    navigate("/");
+    login(data, {
+      onSuccess: ({ token, refresh_token, user }) => {
+        localStorage.setItem("token", token);
+        localStorage.setItem("refresh_token", refresh_token);
+        localStorage.setItem("user", JSON.stringify(user));
+
+        navigate("/");
+      },
+      onError: () => {
+        alert("Erro ao fazer login. Verifique suas credenciais.");
+      },
+    });
   };
 
   return (
     <Container>
       <Form onSubmit={handleSubmit(onSubmit)}>
-        <div>
-          <Input type="email" placeholder="Email" {...register("email")} />
-          {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
-        </div>
+        <Input type="email" {...register("email")} placeholder="Email" />
+        {errors.email && <ErrorText>{errors.email?.message}</ErrorText>}
 
-        <div>
-          <Input
-            type="password"
-            placeholder="Senha"
-            {...register("password")}
-          />
-          {errors.password && <ErrorText>{errors.password.message}</ErrorText>}
-        </div>
+        <Input type="password" {...register("password")} placeholder="Senha" />
+        {errors.password && <ErrorText>{errors.password?.message}</ErrorText>}
 
-        <Button type="submit">Entrar</Button>
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Entrando..." : "Entrar"}
+        </Button>
       </Form>
     </Container>
   );
