@@ -13,7 +13,9 @@ import {
 
 import {
   ActionButton,
+  ButtonGroup,
   CancelButton,
+  ConfirmButton,
   Container,
   ErrorText,
   Input,
@@ -27,6 +29,8 @@ import {
   Tr,
 } from "./styles";
 import Head from "../../components/Head/Head";
+
+import toast from "react-hot-toast";
 
 interface User {
   id: string;
@@ -88,14 +92,29 @@ export default function Dashboard() {
   };
 
   const handleDelete = (id: string) => {
-    const confirm = window.confirm("Deseja realmente excluir?");
-    if (confirm) {
-      deleteMutation.mutate(id); // Chama a mutação para excluir o usuário
-    }
+    toast((t) => (
+      <span>
+        Deseja realmente excluir?
+        <ButtonGroup>
+          <ConfirmButton
+            onClick={() => {
+              deleteMutation.mutate(id);
+              toast.dismiss(t.id);
+              toast.success("Usuário excluído com sucesso.");
+            }}
+          >
+            Confirmar
+          </ConfirmButton>
+          <CancelButton onClick={() => toast.dismiss(t.id)}>
+            Cancelar
+          </CancelButton>
+        </ButtonGroup>
+      </span>
+    ));
   };
 
   const onSubmit = (data: User) => {
-    saveMutation.mutate(data); // Chama a mutação para criar ou atualizar o usuário
+    saveMutation.mutate(data);
   };
 
   if (isLoading) return <p>Carregando...</p>;

@@ -98,3 +98,18 @@ export const ErrorText = styled.p`
   color: red;
   margin: -0.5rem 0 0.5rem;
 `;
+
+export const ConfirmButton = styled.button`
+  padding: 4px 8px;
+  background: red;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+`;
+
+export const ButtonGroup = styled.div`
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+`;
