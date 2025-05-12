@@ -19,13 +19,12 @@ import type { User } from "../../../types";
 
 interface UserModalProps {
   user: User;
-  mode: "edit" | "view";
+  mode: "edit" | "view" | "create";
   onClose: () => void;
   onSubmit?: (data: User) => void;
   isLoading?: boolean;
 }
 
-// Esquema de validação
 const schema = yup.object({
   name: yup.string().required("Nome obrigatório"),
   email: yup.string().email("Email inválido").required("Email obrigatório"),
@@ -50,7 +49,6 @@ const UserModal: React.FC<UserModalProps> = ({
     defaultValues: user,
   });
 
-  // Atualiza o form caso o usuário mude
   useEffect(() => {
     reset(user);
   }, [user, reset]);
@@ -63,7 +61,11 @@ const UserModal: React.FC<UserModalProps> = ({
     <ModalOverlay>
       <ModalContent>
         <ModalHeader>
-          <h2>{mode === "edit" ? "Editar Usuário" : "Visualizar Usuário"}</h2>
+          <h2>
+            {mode === "edit" && "Editar Usuário"}
+            {mode === "view" && "Visualizar Usuário"}
+            {mode === "create" && "Adicionar Usuário"}
+          </h2>
           <CloseBtn onClick={onClose}>
             <FaTimes />
           </CloseBtn>
@@ -97,18 +99,16 @@ const UserModal: React.FC<UserModalProps> = ({
             />
           </FormRow>
 
-          <ButtonGroup>
-            {mode === "edit" && (
+          {mode !== "view" && (
+            <ButtonGroup>
               <CancelButton type="button" onClick={onClose}>
                 Cancelar
               </CancelButton>
-            )}
-            {mode === "edit" && (
               <SaveButton type="submit" disabled={isLoading}>
                 {isLoading ? "Salvando..." : "Salvar"}
               </SaveButton>
-            )}
-          </ButtonGroup>
+            </ButtonGroup>
+          )}
         </form>
       </ModalContent>
     </ModalOverlay>

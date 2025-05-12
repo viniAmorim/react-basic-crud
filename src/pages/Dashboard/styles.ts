@@ -1,11 +1,7 @@
 import styled from "styled-components";
 
 export const Container = styled.div`
-  padding: 90px 2rem 2rem; /* Adiciona espaço no topo para a Head fixa */
-`;
-
-export const Title = styled.h1`
-  margin-bottom: 1.5rem;
+  padding: 2rem;
 `;
 
 export const Table = styled.table`
@@ -14,9 +10,10 @@ export const Table = styled.table`
 `;
 
 export const Thead = styled.thead`
-  background-color: ${({ theme }) => theme.colors.primary};
-  color: white;
+  background-color: #f0f0f0;
 `;
+
+export const Tr = styled.tr``;
 
 export const Th = styled.th`
   padding: 0.75rem;
@@ -28,96 +25,48 @@ export const Td = styled.td`
   border-bottom: 1px solid #ccc;
 `;
 
-export const Tr = styled.tr`
-  &:hover {
-    background-color: #f9f9f9;
-  }
-`;
-
-export const ActionButton = styled.button<{ variant?: "edit" | "delete" }>`
-  padding: 0.5rem 1rem;
-  margin-right: 0.5rem;
-  border: none;
-  border-radius: 4px;
-  color: white;
-  background-color: ${({ variant }) =>
-    variant === "delete" ? "#e74c3c" : "#2980b9"};
-  cursor: pointer;
-
-  &:hover {
-    opacity: 0.9;
-  }
-`;
-
-// Modal
-export const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-`;
-
-export const ModalContent = styled.div`
-  background: white;
-  padding: 2rem;
-  max-width: 500px;
-  margin: 10% auto;
-  border-radius: 8px;
-`;
-
-export const Input = styled.input`
-  width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+export const ButtonGroup = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
 `;
 
 export const SaveButton = styled.button`
-  padding: 0.75rem 1.5rem;
-  background-color: green;
+  background-color: #007bff;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+`;
+
+export const ConfirmButton = styled.button`
+  background-color: #28a745;
   color: white;
   border: none;
-  border-radius: 4px;
+  padding: 0.5rem 1rem;
   cursor: pointer;
 `;
 
 export const CancelButton = styled.button`
-  margin-left: 1rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #aaa;
+  background-color: #dc3545;
   color: white;
   border: none;
-  border-radius: 4px;
+  padding: 0.5rem 1rem;
   cursor: pointer;
 `;
 
-export const ErrorText = styled.p`
-  color: red;
-  margin: -0.5rem 0 0.5rem;
-`;
-
-export const ConfirmButton = styled.button`
-  padding: 4px 8px;
-  background: red;
-  color: white;
+export const ActionButton = styled.button<{ variant?: "edit" | "delete" }>`
+  margin-right: 0.5rem;
+  padding: 0.25rem 0.5rem;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
-`;
-
-export const ButtonGroup = styled.div`
-  margin-top: 8px;
-  display: flex;
-  gap: 8px;
-`;
-
-export const Button = styled.button<{ $variant: string }>`
-  background-color: ${(props) =>
-    props.$variant === "primary" ? "blue" : "gray"};
+  background-color: ${({ variant }) =>
+    variant === "edit"
+      ? "#ffc107"
+      : variant === "delete"
+      ? "#dc3545"
+      : "#17a2b8"};
   color: white;
-  padding: 10px;
-  border-radius: 5px;
+  border-radius: 0.25rem;
+  cursor: pointer;
 `;

@@ -12,7 +12,7 @@ import {
   findUserById,
 } from "../../services/api";
 
-import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import { FaEye, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 
 import {
   ActionButton,
@@ -50,6 +50,7 @@ export default function Dashboard() {
 
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
+  const [creatingUser, setCreatingUser] = useState(false);
 
   const {
     register,
@@ -79,7 +80,7 @@ export default function Dashboard() {
   const saveMutation = useMutation({
     mutationFn: (user: User) =>
       editingUser ? updateUser(user) : createUser(user),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
 
       toast.success(
@@ -89,6 +90,7 @@ export default function Dashboard() {
       );
 
       setEditingUser(null);
+      setCreatingUser(false);
       reset();
     },
   });
@@ -130,7 +132,6 @@ export default function Dashboard() {
   };
 
   const onSubmit = (data: User) => {
-    console.log(data);
     saveMutation.mutate(data);
   };
 
@@ -140,6 +141,13 @@ export default function Dashboard() {
   return (
     <Container>
       <Head />
+
+      <ButtonGroup style={{ marginBottom: "1rem" }}>
+        <SaveButton onClick={() => setCreatingUser(true)}>
+          <FaPlus style={{ marginRight: 8 }} />
+          Adicionar Usuário
+        </SaveButton>
+      </ButtonGroup>
 
       <Table>
         <Thead>
@@ -190,6 +198,16 @@ export default function Dashboard() {
           user={editingUser}
           mode="edit"
           onClose={() => setEditingUser(null)}
+          onSubmit={onSubmit}
+          isLoading={saveMutation.isLoading}
+        />
+      )}
+
+      {creatingUser && (
+        <UserModal
+          user={{ id: "", name: "", email: "", phone: "", isAdmin: false }}
+          mode="create"
+          onClose={() => setCreatingUser(false)}
           onSubmit={onSubmit}
           isLoading={saveMutation.isLoading}
         />
