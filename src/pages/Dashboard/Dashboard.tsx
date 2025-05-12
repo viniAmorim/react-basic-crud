@@ -130,6 +130,7 @@ export default function Dashboard() {
   };
 
   const onSubmit = (data: User) => {
+    console.log(data);
     saveMutation.mutate(data);
   };
 

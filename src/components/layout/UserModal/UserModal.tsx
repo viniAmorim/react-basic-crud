@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { FaTimes } from "react-icons/fa";
 
 import { CancelButton, Input } from "../UserForm/styles";
-import type { User } from "../../../types";
 import {
   ButtonGroup,
   ModalContent,
@@ -13,6 +15,8 @@ import {
   FormRow,
 } from "./styles";
 
+import type { User } from "../../../types";
+
 interface UserModalProps {
   user: User;
   mode: "edit" | "view";
@@ -21,6 +25,14 @@ interface UserModalProps {
   isLoading?: boolean;
 }
 
+// Esquema de validação
+const schema = yup.object({
+  name: yup.string().required("Nome obrigatório"),
+  email: yup.string().email("Email inválido").required("Email obrigatório"),
+  phone: yup.string().required("Telefone obrigatório"),
+  isAdmin: yup.boolean(),
+});
+
 const UserModal: React.FC<UserModalProps> = ({
   user,
   mode,
@@ -28,7 +40,24 @@ const UserModal: React.FC<UserModalProps> = ({
   onSubmit,
   isLoading,
 }) => {
-  const { name, email, phone, isAdmin } = user;
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<User>({
+    resolver: yupResolver(schema),
+    defaultValues: user,
+  });
+
+  // Atualiza o form caso o usuário mude
+  useEffect(() => {
+    reset(user);
+  }, [user, reset]);
+
+  const submitForm = (data: User) => {
+    if (onSubmit) onSubmit(data);
+  };
 
   return (
     <ModalOverlay>
@@ -40,49 +69,42 @@ const UserModal: React.FC<UserModalProps> = ({
           </CloseBtn>
         </ModalHeader>
 
-        <form>
+        <form onSubmit={handleSubmit(submitForm)}>
           <FormRow>
             <label>Nome</label>
-            <Input name="name" defaultValue={name} disabled={mode === "view"} />
+            <Input {...register("name")} disabled={mode === "view"} />
+            {errors.name && <span>{errors.name.message}</span>}
           </FormRow>
 
           <FormRow>
             <label>Email</label>
-            <Input
-              name="email"
-              defaultValue={email}
-              disabled={mode === "view"}
-            />
+            <Input {...register("email")} disabled={mode === "view"} />
+            {errors.email && <span>{errors.email.message}</span>}
           </FormRow>
 
           <FormRow>
             <label>Telefone</label>
-            <Input
-              name="phone"
-              defaultValue={phone}
-              disabled={mode === "view"}
-            />
+            <Input {...register("phone")} disabled={mode === "view"} />
+            {errors.phone && <span>{errors.phone.message}</span>}
           </FormRow>
 
           <FormRow>
             <label>Administrador</label>
-            <Input
+            <input
               type="checkbox"
-              name="isAdmin"
-              defaultChecked={isAdmin}
+              {...register("isAdmin")}
               disabled={mode === "view"}
             />
           </FormRow>
 
           <ButtonGroup>
             {mode === "edit" && (
-              <CancelButton onClick={onClose}>Cancelar</CancelButton>
+              <CancelButton type="button" onClick={onClose}>
+                Cancelar
+              </CancelButton>
             )}
             {mode === "edit" && (
-              <SaveButton
-                onClick={() => onSubmit && onSubmit(user)}
-                disabled={isLoading}
-              >
+              <SaveButton type="submit" disabled={isLoading}>
                 {isLoading ? "Salvando..." : "Salvar"}
               </SaveButton>
             )}
