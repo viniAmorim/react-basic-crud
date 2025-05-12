@@ -3,13 +3,16 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"; // Adicionado o useMutation para as requisições POST e DELETE
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchUsers,
   deleteUser,
   updateUser,
   createUser,
-} from "../../services/api"; // Funções de API
+  findUserById,
+} from "../../services/api";
+
+import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 
 import {
   ActionButton,
@@ -28,17 +31,11 @@ import {
   Thead,
   Tr,
 } from "./styles";
-import Head from "../../components/Head/Head";
+import Head from "../../components/layout/Head/Head";
 
 import toast from "react-hot-toast";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  isAdmin: boolean;
-}
+import type { User } from "../../types";
+import UserModal from "../../components/layout/UserModal/UserModal";
 
 const schema = yup.object({
   name: yup.string().required("Nome obrigatório"),
@@ -49,9 +46,10 @@ const schema = yup.object({
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient(); // Usado para atualizar o cache após uma operação
+  const queryClient = useQueryClient();
 
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [viewingUser, setViewingUser] = useState<User | null>(null);
 
   const {
     register,
@@ -81,14 +79,32 @@ export default function Dashboard() {
   const saveMutation = useMutation({
     mutationFn: (user: User) =>
       editingUser ? updateUser(user) : createUser(user),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+
+      toast.success(
+        editingUser
+          ? "Usuário editado com sucesso."
+          : "Usuário criado com sucesso."
+      );
+
+      setEditingUser(null);
+      reset();
     },
   });
 
   const handleEdit = (user: User) => {
     setEditingUser(user);
     reset(user);
+  };
+
+  const handleView = async (user: User) => {
+    try {
+      const freshUser = await findUserById(user.id);
+      setViewingUser(freshUser);
+    } catch (err) {
+      toast.error("Erro ao buscar usuário.");
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -122,12 +138,7 @@ export default function Dashboard() {
 
   return (
     <Container>
-      <Head
-        onAddUser={() => {
-          setEditingUser(null); // Reseta a edição
-          reset({ name: "", email: "", phone: "", isAdmin: "" });
-        }}
-      />
+      <Head />
 
       <Table>
         <Thead>
@@ -147,14 +158,25 @@ export default function Dashboard() {
               <Td>{user.phone}</Td>
               <Td>{user.isAdmin ? "Sim" : "Não"}</Td>
               <Td>
-                <ActionButton variant="edit" onClick={() => handleEdit(user)}>
-                  Editar
+                <ActionButton
+                  title="Visualizar"
+                  onClick={() => handleView(user)}
+                >
+                  <FaEye />
                 </ActionButton>
                 <ActionButton
+                  title="Editar"
+                  variant="edit"
+                  onClick={() => handleEdit(user)}
+                >
+                  <FaEdit />
+                </ActionButton>
+                <ActionButton
+                  title="Excluir"
                   variant="delete"
                   onClick={() => handleDelete(user.id)}
                 >
-                  Excluir
+                  <FaTrash />
                 </ActionButton>
               </Td>
             </Tr>
@@ -163,39 +185,21 @@ export default function Dashboard() {
       </Table>
 
       {editingUser && (
-        <ModalOverlay>
-          <ModalContent>
-            <h2>{editingUser ? "Editar Usuário" : "Adicionar Usuário"}</h2>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <Input placeholder="Nome" {...register("name")} />
-              {errors.name && <ErrorText>{errors.name.message}</ErrorText>}
+        <UserModal
+          user={editingUser}
+          mode="edit"
+          onClose={() => setEditingUser(null)}
+          onSubmit={onSubmit}
+          isLoading={saveMutation.isLoading}
+        />
+      )}
 
-              <Input placeholder="Email" {...register("email")} />
-              {errors.email && <ErrorText>{errors.email.message}</ErrorText>}
-
-              <Input placeholder="Telefone" {...register("phone")} />
-              {errors.phone && <ErrorText>{errors.phone.message}</ErrorText>}
-
-              <select {...register("isAdmin")}>
-                <option value="">Selecione</option>
-                <option value="true">Sim</option>
-                <option value="false">Não</option>
-              </select>
-              {errors.isAdmin && (
-                <ErrorText>{errors.isAdmin.message}</ErrorText>
-              )}
-
-              <div>
-                <SaveButton type="submit" disabled={saveMutation.isLoading}>
-                  {saveMutation.isLoading ? "Salvando..." : "Salvar"}
-                </SaveButton>
-                <CancelButton onClick={() => setEditingUser(null)}>
-                  Cancelar
-                </CancelButton>
-              </div>
-            </form>
-          </ModalContent>
-        </ModalOverlay>
+      {viewingUser && (
+        <UserModal
+          user={viewingUser}
+          mode="view"
+          onClose={() => setViewingUser(null)}
+        />
       )}
     </Container>
   );

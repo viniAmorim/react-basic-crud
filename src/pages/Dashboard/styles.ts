@@ -113,3 +113,11 @@ export const ButtonGroup = styled.div`
   display: flex;
   gap: 8px;
 `;
+
+export const Button = styled.button<{ $variant: string }>`
+  background-color: ${(props) =>
+    props.$variant === "primary" ? "blue" : "gray"};
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+`;
