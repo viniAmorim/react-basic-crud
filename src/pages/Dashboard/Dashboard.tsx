@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,8 +11,11 @@ import {
   createUser,
   findUserById,
 } from "../../services/api";
+import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 
-import { FaEye, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import { useDebounce } from "../../hooks/useDebounce";
+import toast from "react-hot-toast";
+import UserModal from "../../components/layout/UserModal/UserModal";
 
 import {
   ActionButton,
@@ -20,11 +23,7 @@ import {
   CancelButton,
   ConfirmButton,
   Container,
-  ErrorText,
   Input,
-  ModalContent,
-  ModalOverlay,
-  SaveButton,
   Table,
   Td,
   Th,
@@ -32,10 +31,6 @@ import {
   Tr,
 } from "./styles";
 import Head from "../../components/layout/Head/Head";
-
-import toast from "react-hot-toast";
-import type { User } from "../../types";
-import UserModal from "../../components/layout/UserModal/UserModal";
 
 const schema = yup.object({
   name: yup.string().required("Nome obrigatório"),
@@ -48,26 +43,42 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [viewingUser, setViewingUser] = useState<User | null>(null);
-  const [creatingUser, setCreatingUser] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<User>({
-    resolver: yupResolver(schema),
+  const [editingUser, setEditingUser] = useState(null);
+  const [viewingUser, setViewingUser] = useState(null);
+  const [searchName, setSearchName] = useState("");
+  const [searchEmail, setSearchEmail] = useState("");
+  const [searchPhone, setSearchPhone] = useState("");
+  const [searchIsAdmin, setSearchIsAdmin] = useState(""); // "", "true", "false"
+  const [filters, setFilters] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    isAdmin: "",
   });
 
+  // Debounce filters
+  const debouncedSetFilters = useDebounce((newFilters) => {
+    setFilters(newFilters);
+  }, 500);
+
+  useEffect(() => {
+    debouncedSetFilters({
+      name: searchName,
+      email: searchEmail,
+      phone: searchPhone,
+      isAdmin: searchIsAdmin,
+    });
+  }, [searchName, searchEmail, searchPhone, searchIsAdmin]);
+
   const {
-    data: users,
+    data: users = [],
     isLoading,
     error,
+    refetch,
   } = useQuery({
-    queryKey: ["users"],
-    queryFn: fetchUsers,
+    queryKey: ["users", filters],
+    queryFn: () => fetchUsers(filters),
+    keepPreviousData: true,
   });
 
   const deleteMutation = useMutation({
@@ -78,29 +89,23 @@ export default function Dashboard() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: (user: User) =>
-      editingUser ? updateUser(user) : createUser(user),
+    mutationFn: (user) => (editingUser ? updateUser(user) : createUser(user)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-
       toast.success(
         editingUser
           ? "Usuário editado com sucesso."
           : "Usuário criado com sucesso."
       );
-
       setEditingUser(null);
-      setCreatingUser(false);
-      reset();
     },
   });
 
-  const handleEdit = (user: User) => {
+  const handleEdit = (user) => {
     setEditingUser(user);
-    reset(user);
   };
 
-  const handleView = async (user: User) => {
+  const handleView = async (user) => {
     try {
       const freshUser = await findUserById(user.id);
       setViewingUser(freshUser);
@@ -109,7 +114,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id) => {
     toast((t) => (
       <span>
         Deseja realmente excluir?
@@ -131,7 +136,7 @@ export default function Dashboard() {
     ));
   };
 
-  const onSubmit = (data: User) => {
+  const onSubmit = (data) => {
     saveMutation.mutate(data);
   };
 
@@ -141,13 +146,31 @@ export default function Dashboard() {
   return (
     <Container>
       <Head />
-
-      <ButtonGroup style={{ marginBottom: "1rem" }}>
-        <SaveButton onClick={() => setCreatingUser(true)}>
-          <FaPlus style={{ marginRight: 8 }} />
-          Adicionar Usuário
-        </SaveButton>
-      </ButtonGroup>
+      <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+        <Input
+          placeholder="Buscar por nome"
+          value={searchName}
+          onChange={(e) => setSearchName(e.target.value)}
+        />
+        <Input
+          placeholder="Buscar por email"
+          value={searchEmail}
+          onChange={(e) => setSearchEmail(e.target.value)}
+        />
+        <Input
+          placeholder="Buscar por telefone"
+          value={searchPhone}
+          onChange={(e) => setSearchPhone(e.target.value)}
+        />
+        <select
+          value={searchIsAdmin}
+          onChange={(e) => setSearchIsAdmin(e.target.value)}
+        >
+          <option value="">Todos</option>
+          <option value="true">Administradores</option>
+          <option value="false">Usuários comuns</option>
+        </select>
+      </div>
 
       <Table>
         <Thead>
@@ -198,16 +221,6 @@ export default function Dashboard() {
           user={editingUser}
           mode="edit"
           onClose={() => setEditingUser(null)}
-          onSubmit={onSubmit}
-          isLoading={saveMutation.isLoading}
-        />
-      )}
-
-      {creatingUser && (
-        <UserModal
-          user={{ id: "", name: "", email: "", phone: "", isAdmin: false }}
-          mode="create"
-          onClose={() => setCreatingUser(false)}
           onSubmit={onSubmit}
           isLoading={saveMutation.isLoading}
         />

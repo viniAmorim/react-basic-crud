@@ -21,9 +21,23 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Função para buscar os usuários
-export const fetchUsers = async () => {
-  const response = await api.get("/users");
+// Função para buscar os usuários com filtros opcionais
+export const fetchUsers = async (
+  filters: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    isAdmin?: string;
+  } = {}
+) => {
+  const params = new URLSearchParams();
+
+  if (filters.name) params.append("name", filters.name);
+  if (filters.email) params.append("email", filters.email);
+  if (filters.phone) params.append("phone", filters.phone);
+  if (filters.isAdmin !== "") params.append("isAdmin", filters.isAdmin); // "true" ou "false"
+
+  const response = await api.get(`/users?${params.toString()}`);
   return response.data;
 };
 

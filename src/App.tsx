@@ -4,6 +4,7 @@ import "./App.css";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import PrivateRoute from "./routes/PrivateRoute";
 import { Toaster } from "react-hot-toast";
+import Register from "./pages/Register/Register";
 
 function App() {
   return (
@@ -20,6 +21,8 @@ function App() {
             </PrivateRoute>
           }
         />
+
+        <Route path="/cadastro" element={<Register />} />
 
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>

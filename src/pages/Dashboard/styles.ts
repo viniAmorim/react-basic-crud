@@ -70,3 +70,9 @@ export const ActionButton = styled.button<{ variant?: "edit" | "delete" }>`
   border-radius: 0.25rem;
   cursor: pointer;
 `;
+
+export const Input = styled.input`
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+`;
